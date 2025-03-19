@@ -1,0 +1,28 @@
+
+version: 2
+
+models:
+    - name: active_accounts
+      description: "Creating the ACTIVE_ACCOUNTS table"
+      columns:
+          - name: DATE
+            description: "The date when an account was active"
+            tests:
+                - not_null
+          - name: ACCOUNT_ID
+            description: "The id of the account that was active on a specific date"
+            tests:
+                - not_null
+
+    - name: active_accounts_last_seen
+      description: "The last day of activity for an account"
+      columns:
+          - name: ACCOUNT_ID
+            description: "The id of the account that was active on a specific date"
+            tests:
+                - unique
+                - not_null
+          - name: LAST_SEEN
+            description: "The date when the account was seen for the last time"
+            tests:
+                - not_null

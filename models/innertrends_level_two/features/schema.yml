@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: features
+    description: Contains user-level events enriched with a 'feature' label. Features are dynamically determined based on logic stored in the FEATURES JSON from the DATA_SETTINGS table.
+    columns:
+      - name: timestamp
+        description: Time of the user event.
+        tests:
+          - not_null
+
+      - name: event
+        description: Name of the event triggered by the user.
+        tests:
+          - not_null
+
+      - name: account_id
+        description: Unique identifier for the account associated with the event.
+        tests:
+          - not_null
+
+      - name: user_id
+        description: User ID related to the event.
+        tests: []
+
+      - name: feature
+        description: Name of the feature this event matched with (based on the JSON rules).
+        tests:
+          - not_null

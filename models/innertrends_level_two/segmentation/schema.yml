@@ -1,16 +1,16 @@
 version: 2
 
 models:
-  - name: accounts_segments
+  - name: ACCOUNTS_SEGMENTS
     description: >
       Contains account-level segmentation based on rules defined in ACCOUNTS_SEGMENTS JSON from the DATA_SETTINGS table. Each row links an account to a named segment.
     columns:
-      - name: account_id
+      - name: ACCOUNT_ID
         description: Unique identifier for the account.
         tests:
           - not_null
 
-      - name: segment_name
+      - name: SEGMENT_NAME
         description: The name of the segment this account belongs to.
         tests:
           - not_null

@@ -8,7 +8,6 @@
 {%- set segments_tables = [] %}
 
 
---{{segments}}
 
 WITH 
     

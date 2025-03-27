@@ -19,9 +19,11 @@
 
 {% macro retrieve_match(type, property, value) %}
     {% if property == "event" %}
-        {% set property_match = "event" %}
+        {% set property_match = "EVENT" %}
+    {% elif property == 'account' %}
+        {% set property_match = "PROPERTY_VALUE" %}
     {% else %}
-        {% set property_match = "json_extract_scalar(event_properties, '$." ~ property ~ "')" %}
+        {% set property_match = "json_extract_scalar(EVENT_PROPERTIES, '$." ~ property ~ "')" %}
     {% endif %}
 
     {% if type == "exact_match" %}
@@ -32,4 +34,3 @@
         (REGEXP_CONTAINS({{ property_match }}, '{{ value }}')) 
     {% endif %}
 {% endmacro %}
-

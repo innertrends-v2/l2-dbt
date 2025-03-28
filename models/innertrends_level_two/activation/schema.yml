@@ -1,0 +1,41 @@
+
+version: 2
+
+models:
+    - name: ONBOARDING_FLOW
+      description: "Creating the ONBOARDING_FLOW table based on onboarding steps"
+      columns:
+          - name: ACCOUNT_ID
+            description: "The id of the account"
+            tests:
+                - not_null
+          - name: FROM_TIMESTAMP
+            description: "The timestamp when the user reached the onboarding step from which he continued"
+            tests:
+                - not_null
+          - name: FROM_STEP
+            description: "The onboarding step from which he continued"
+            tests:
+                - not_null
+          - name: TO_TIMESTAMP
+            description: "The timestamp when the user reached the onboarding step to which he continued"
+
+          - name: TO_STEP
+            description: "The onboarding step to which he continued"
+
+
+    - name: ACTIVATION_GOALS
+      description: "Creating the ACTIVATION_GOALS table"
+      columns:
+          - name: ACCOUNT_ID
+            description: "The id of the account that reached activation goal"
+            tests:
+                - not_null
+          - name: USER_ID
+            description: "The id of the user that reached activation goal"
+            tests:
+                - not_null
+          - name: GOAL
+            description: "The name of the goal that was reached"
+            tests:
+                - not_null

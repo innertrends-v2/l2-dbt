@@ -7,7 +7,7 @@
 {% set segments = get_segments_definition(var('client')) %}
 {%- set segments_tables = [] %}
 
-
+-- depends_on: {{ ref('active_accounts') }}
 
 WITH 
     
@@ -82,7 +82,7 @@ WITH
                 ){%- if not loop.last %} , {% endif -%}
 
                 {%- if "EXCLUDE" in ruleset and "INCLUDE" not in ruleset %}
-                    SELECT DISTINCT a.ACCOUNT_ID FROM {{ var('client') }}.ACTIVE_ACCOUNTS a WHERE NOT EXISTS (SELECT 1 FROM {{temp_table_name}}_EXCLUDE b WHERE a.ACCOUNT_ID = b.ACCOUNT_ID)
+                    SELECT DISTINCT a.ACCOUNT_ID FROM {{ ref('active_accounts') }} a WHERE NOT EXISTS (SELECT 1 FROM {{temp_table_name}}_EXCLUDE b WHERE a.ACCOUNT_ID = b.ACCOUNT_ID)
                 {%- elif "EXCLUDE" in ruleset %}
                     SELECT DISTINCT a.ACCOUNT_ID FROM {{temp_table_name}}_INCLUDE a WHERE NOT EXISTS (SELECT 1 FROM {{temp_table_name}}_EXCLUDE b WHERE a.ACCOUNT_ID = b.ACCOUNT_ID)
                 {%- elif "INCLUDE" in ruleset %}

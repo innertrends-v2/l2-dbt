@@ -17,13 +17,15 @@
     {% endif %}
 {% endmacro %}
 
-{% macro retrieve_match(type, property, value) %}
+{% macro retrieve_match(type, property, value, prefix='') %}
+    {% set prefix = prefix if prefix else '' %}
+
     {% if property == "event" %}
-        {% set property_match = "EVENT" %}
+        {% set property_match = prefix ~ "EVENT" %}
     {% elif property == 'account' %}
-        {% set property_match = "PROPERTY_VALUE" %}
+        {% set property_match = prefix ~ "PROPERTY_VALUE" %}
     {% else %}
-        {% set property_match = "json_extract_scalar(EVENT_PROPERTIES, '$." ~ property ~ "')" %}
+        {% set property_match = "json_extract_scalar(" ~ prefix ~ "EVENT_PROPERTIES, '$." ~ property ~ "')" %}
     {% endif %}
 
     {% if type == "exact_match" %}

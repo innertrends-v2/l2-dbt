@@ -6,39 +6,37 @@
 {% set dates = get_date_range(var('client')) %}
 {% set activation_goals = get_activation_goals_definition(var('client')) %}
 
---{{activation_goals}}
-
 WITH 
     EVENTS_AND_UX AS (
-        /* Combine data from EVENTS,  UX_INTERACTIONS and PAYMENTS tables */
+        /* Combine data from EVENTS, UX_INTERACTIONS and PAYMENTS tables */
         SELECT 
-            timestamp, 
-            event, 
-            account_id, 
-            user_id, 
-            event_properties
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID, 
+            EVENT_PROPERTIES
         FROM {{ var('client') }}.EVENTS
 
         UNION ALL
 
         SELECT 
-            timestamp, 
-            event, 
-            account_id, 
-            user_id, 
-            event_properties  
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID, 
+            EVENT_PROPERTIES  
         FROM {{ var('client') }}.UX_INTERACTIONS
 
         UNION ALL
 
-            SELECT 
-                TIMESTAMP, 
-                EVENT, 
-                ACCOUNT_ID, 
-                USER_ID,
-                PAYMENT_PROPERTIES AS EVENT_PROPERTIES
-            FROM 
-                {{ var('client') }}.PAYMENTS
+        SELECT 
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID,
+            PAYMENT_PROPERTIES AS EVENT_PROPERTIES
+        FROM 
+            {{ var('client') }}.PAYMENTS
     ),
 
 
@@ -46,29 +44,29 @@ WITH
 {%- for goal in activation_goals %}
     
     {%- set goal_number = loop.index %}
-    goal_{{goal_number}} AS (
+    GOAL_{{goal_number}} AS (
         WITH
     {%- for goal_name, goal_definition in goal.items() %}
         {%- set rule_number = goal_definition["rules"] | length %}
 
         {%- set strict_join = '' %}
         {%- if rule_number == 2 and goal_definition["type"].upper() == "STRICT" %}
-            {%- set strict_join = 'INNER JOIN goal_rules_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
+            {%- set strict_join = 'INNER JOIN GOAL_RULES_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
 
         {% endif %}
     
         {%- for rule in goal_definition["rules"] %}
             {%- set rule_number = loop.index %}
-            goal_rules_{{rule_number}} AS (
+            GOAL_RULES_{{rule_number}} AS (
             {%- if rule["template"] == "count" %}
                 
-                WITH RankedEvents AS (
+                WITH RANKED_EVENTS AS (
                     SELECT 
                         {%- if rule.get("group_by") == "user_id" %} MIN(E.TIMESTAMP) {%- else %} E.TIMESTAMP {%- endif %} AS TIMESTAMP,
                         E.ACCOUNT_ID,
                         E.USER_ID,
                         '{{ goal_name }}' AS GOAL,
-                        ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) as RN
+                        ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) AS RN
                     FROM EVENTS_AND_UX E
                     {{strict_join}}
                     {% if goal_definition.get("time_limit") %}
@@ -80,8 +78,8 @@ WITH
                     {% endif %}
                     WHERE {{ generate_activation_query(rule["content"], 'E.') }}
                         AND E.ACCOUNT_ID IN (
-                        SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
-                        WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
+                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
+                            WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
 
                     {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
@@ -93,19 +91,19 @@ WITH
                     USER_ID, 
                     GOAL
                 FROM 
-                    RankedEvents
+                    RANKED_EVENTS
                 WHERE 
                     RN = {{ rule["value"] }}
                 
             
             {%- elif rule["template"] == "user_count" %}
-                WITH RankedUsers AS (
+                WITH RANKED_USERS AS (
                     SELECT 
                         E.ACCOUNT_ID,
                         E.USER_ID,
-                        MIN(E.TIMESTAMP) as FirstEventTimestamp,
-                        '{{goal_name}}' as GOAL,
-                        ROW_NUMBER() OVER (PARTITION BY E.ACCOUNT_ID ORDER BY MIN(E.TIMESTAMP)) as UserRank
+                        MIN(E.TIMESTAMP) AS FIRST_EVENT_TIMESTAMP,
+                        '{{goal_name}}' AS GOAL,
+                        ROW_NUMBER() OVER (PARTITION BY E.ACCOUNT_ID ORDER BY MIN(E.TIMESTAMP)) AS USER_RANK
                     FROM 
                         EVENTS_AND_UX E
                     {{ strict_join }}
@@ -117,8 +115,8 @@ WITH
                             AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
                     {% endif %}
                     WHERE
-                        E.USER_ID != '' and E.USER_ID is not NULL
-                        AND E.ACCOUNT_ID in
+                        E.USER_ID != '' AND E.USER_ID IS NOT NULL
+                        AND E.ACCOUNT_ID IN
                         (
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
@@ -127,21 +125,21 @@ WITH
                         E.ACCOUNT_ID, E.USER_ID
                 )
                 SELECT 
-                    FirstEventTimestamp as TIMESTAMP, 
+                    FIRST_EVENT_TIMESTAMP AS TIMESTAMP, 
                     ACCOUNT_ID, 
                     USER_ID, 
                     GOAL
                 FROM 
-                    RankedUsers
+                    RANKED_USERS
                 WHERE 
-                    UserRank = {{ rule["value"] }}
+                    USER_RANK = {{ rule["value"] }}
 
             {%- elif rule["template"] == "days_count" %}
-                WITH AccountActivityDays AS (
+                WITH ACCOUNT_ACTIVITY_DAYS AS (
                     SELECT 
                         E.ACCOUNT_ID,
-                        DATE(E.TIMESTAMP) AS ActivityDate,
-                        MIN(E.TIMESTAMP) AS FirstEventTimestamp
+                        DATE(E.TIMESTAMP) AS ACTIVITY_DATE,
+                        MIN(E.TIMESTAMP) AS FIRST_EVENT_TIMESTAMP
                     FROM 
                         EVENTS_AND_UX E
                     {{strict_join}}
@@ -157,33 +155,33 @@ WITH
                             {{ generate_activation_query(rule["content"], 'E.') }}
                             AND 
                         {% endif %}
-                        E.ACCOUNT_ID in
+                        E.ACCOUNT_ID IN
                         (
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
                         {strict_condition}
                     GROUP BY 
-                        E.ACCOUNT_ID, ActivityDate
+                        E.ACCOUNT_ID, ACTIVITY_DATE
                 ),
-                RankedActivityDays AS (
+                RANKED_ACTIVITY_DAYS AS (
                     SELECT 
                         ACCOUNT_ID,
-                        ActivityDate,
-                        FirstEventTimestamp,
-                        ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY ActivityDate) AS DayRank
+                        ACTIVITY_DATE,
+                        FIRST_EVENT_TIMESTAMP,
+                        ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY ACTIVITY_DATE) AS DAY_RANK
                     FROM 
-                        AccountActivityDays
+                        ACCOUNT_ACTIVITY_DAYS
                 )
                 SELECT 
-                    FirstEventTimestamp as TIMESTAMP,
+                    FIRST_EVENT_TIMESTAMP AS TIMESTAMP,
                     ACCOUNT_ID,
-                    '' as USER_ID,
-                    '{{goal_name}}' as GOAL
+                    '' AS USER_ID,
+                    '{{goal_name}}' AS GOAL
                 FROM 
-                    RankedActivityDays
+                    RANKED_ACTIVITY_DAYS
                 WHERE 
-                    DayRank = {{ rule["value"] }}
+                    DAY_RANK = {{ rule["value"] }}
                 GROUP BY 
                     ACCOUNT_ID, TIMESTAMP
             {%- endif %}
@@ -194,42 +192,42 @@ WITH
        
         
         {%- if rule_number == 1 %}
-            SELECT * FROM goal_rules_1 
+            SELECT * FROM GOAL_RULES_1 
         {%- elif rule_number > 1 %}
             ,
-            combined_goal_rules AS
+            COMBINED_GOAL_RULES AS
             (
             {%- for i in range(1, rule_number + 1) %}
                 SELECT ACCOUNT_ID, USER_ID, TIMESTAMP, '{{ i }}' AS RULE_NUMBER
-                FROM goal_rules_{{ i }}
+                FROM GOAL_RULES_{{ i }}
                 {%- if not loop.last %} UNION ALL {% endif %}
             {%- endfor %}
             )
 
             {% if goal_definition.get('type', '').upper() == 'ANY' %}
                 SELECT 
-                    MIN(TIMESTAMP) as TIMESTAMP,
+                    MIN(TIMESTAMP) AS TIMESTAMP,
                     ACCOUNT_ID, 
                     USER_ID,
-                    '{{goal_name}}' as GOAL
+                    '{{goal_name}}' AS GOAL
                 FROM 
-                    combined_onboarding_rules
+                    COMBINED_GOAL_RULES
                 GROUP BY 
                     ACCOUNT_ID, USER_ID
             {% else %}
                 SELECT 
-                    MAX(TIMESTAMP) as TIMESTAMP,
+                    MAX(TIMESTAMP) AS TIMESTAMP,
                     ACCOUNT_ID, 
                     USER_ID,
-                    '{{goal_name}}' as GOAL
+                    '{{goal_name}}' AS GOAL
                 FROM 
-                    combined_onboarding_rules
+                    COMBINED_GOAL_RULES
                 WHERE
                     ACCOUNT_ID IN (
                         SELECT 
                             ACCOUNT_ID
                         FROM 
-                            combined_onboarding_rules
+                            COMBINED_GOAL_RULES
                         GROUP BY 
                             ACCOUNT_ID
                         HAVING 
@@ -247,10 +245,10 @@ WITH
     ),
 {%- endfor -%}
 
-all_goals AS (
+ALL_GOALS AS (
     {%- for i in range(1, activation_goals_count + 1) %}
         SELECT ACCOUNT_ID, USER_ID, TIMESTAMP, GOAL
-        FROM goal_{{ i }}
+        FROM GOAL_{{ i }}
         {%- if not loop.last %} UNION ALL {% endif %}
     {%- endfor -%}
 )
@@ -261,6 +259,6 @@ SELECT
     TIMESTAMP, 
     GOAL
 FROM
-    all_goals
+    ALL_GOALS
 ORDER BY
     TIMESTAMP ASC

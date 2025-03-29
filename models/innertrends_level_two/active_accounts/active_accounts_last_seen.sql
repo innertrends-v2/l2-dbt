@@ -3,24 +3,17 @@
     alias = 'ACTIVE_ACCOUNTS_LAST_SEEN'
 ) }}
 
+{% set dates = get_date_range(var('client')) %}
 
 
-WITH date_settings AS (
-    SELECT
-        start_date,
-        date_sub(current_date(), INTERVAL 1 DAY) AS end_date
-    FROM
-        DATA_SETTINGS.{{ var('client') }}
-)
 SELECT 
     ACCOUNT_ID, 
     MAX(DATE) AS LAST_SEEN
 FROM 
-    {{ ref('active_accounts') }},
-    DATE_SETTINGS
+    {{ ref('active_accounts') }}
 WHERE 
-    DATE >= CAST(START_DATE AS DATETIME)
-    AND DATE <= CAST(END_DATE AS DATETIME)
+    DATE >= '{{ dates.start_date }}'
+    AND DATE <= {{ dates.end_date }}
 GROUP BY 
     ACCOUNT_ID
 

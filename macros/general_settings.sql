@@ -18,21 +18,21 @@
 {% endmacro %}
 
 {% macro retrieve_match(type, property, value, prefix='') %}
-    {% set prefix = prefix if prefix else '' %}
+    {%- set prefix = prefix if prefix else '' -%}
 
-    {% if property == "event" %}
-        {% set property_match = prefix ~ "EVENT" %}
-    {% elif property == 'account' %}
-        {% set property_match = prefix ~ "PROPERTY_VALUE" %}
-    {% else %}
-        {% set property_match = "json_extract_scalar(" ~ prefix ~ "EVENT_PROPERTIES, '$." ~ property ~ "')" %}
-    {% endif %}
+    {%- if property == "event" -%}
+        {%- set property_match = prefix ~ "EVENT" -%}
+    {%- elif property == 'account' -%}
+        {%- set property_match = prefix ~ "PROPERTY_VALUE" -%}
+    {%- else -%}
+        {%- set property_match = "JSON_EXTRACT_SCALAR(" ~ prefix ~ "EVENT_PROPERTIES, '$." ~ property ~ "')" -%}
+    {%- endif -%}
 
-    {% if type == "exact_match" %}
-        ({{ property_match }} = '{{ value }}') 
-    {% elif type == "contains" %}
-        ({{ property_match }} LIKE '%{{ value }}%') 
-    {% elif type == "regex" %}
-        (REGEXP_CONTAINS({{ property_match }}, '{{ value }}')) 
-    {% endif %}
+    {%- if type == "exact_match" -%}
+        ({{ property_match }} = '{{ value }}')
+    {%- elif type == "contains" -%}
+        ({{ property_match }} LIKE '%{{ value }}%')
+    {%- elif type == "regex" -%}
+        (REGEXP_CONTAINS({{ property_match }}, '{{ value }}'))
+    {%- endif -%}
 {% endmacro %}

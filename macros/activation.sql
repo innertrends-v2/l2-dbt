@@ -38,10 +38,5 @@
 {% endmacro %}
 
 {% macro generate_activation_query(rule, prefix='') %}
-    (
-    {%- for condition in rule %}
-        {%- if not loop.first %} AND {% endif -%}
-        {{- retrieve_match(condition.match_type, condition.match_property, condition.match_value, prefix) -}}
-    {%- endfor -%}
-    )
+                        ({% for condition in rule %}{% if not loop.first %} AND {% endif %}{{ retrieve_match(condition.match_type, condition.match_property, condition.match_value, prefix) }}{% endfor %})
 {% endmacro %}

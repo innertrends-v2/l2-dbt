@@ -8,38 +8,38 @@
 {%- set feature_ctes = [] %}
 
 WITH 
-    events_and_ux AS (
+    EVENTS_AND_UX AS (
         /* Combine data from EVENTS and UX_INTERACTIONS tables */
         SELECT 
-            timestamp, 
-            event, 
-            account_id, 
-            user_id, 
-            event_properties
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID, 
+            EVENT_PROPERTIES
         FROM {{ var('client') }}.EVENTS
 
         UNION ALL
 
         SELECT 
-            timestamp, 
-            event, 
-            account_id, 
-            user_id, 
-            event_properties  
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID, 
+            EVENT_PROPERTIES  
         FROM {{ var('client') }}.UX_INTERACTIONS
     ),
 
 {%- for feature_name, feature_def in features.items() if 'INCLUDE' in feature_def %}
 
-    {{ feature_name }}_include AS (
+    {{ feature_name }}_INCLUDE AS (
         SELECT 
-            timestamp, 
-            event, 
-            account_id, 
-            user_id, 
-            '{{ feature_name }}' AS feature
-        FROM events_and_ux
-        WHERE DATE(timestamp) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
+            TIMESTAMP, 
+            EVENT, 
+            ACCOUNT_ID, 
+            USER_ID, 
+            '{{ feature_name }}' AS FEATURE
+        FROM EVENTS_AND_UX
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
         AND (
             {%- for group in feature_def['INCLUDE'] -%}
                 ({%- for rule in group -%}
@@ -52,22 +52,23 @@ WITH
     )
 
     {%- if 'EXCLUDE' in feature_def %}
-        {{ feature_name }}_exclude AS (
+        ,
+        {{ feature_name }}_EXCLUDE AS (
             SELECT 
-                timestamp, 
-                event, 
-                account_id, 
-                user_id, 
-                feature
-            FROM {{ feature_name }}_include
-            WHERE (timestamp, event, account_id, user_id) NOT IN (
+                TIMESTAMP, 
+                EVENT, 
+                ACCOUNT_ID, 
+                USER_ID, 
+                FEATURE
+            FROM {{ feature_name }}_INCLUDE
+            WHERE (TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID) NOT IN (
                 SELECT 
-                    timestamp, 
-                    event, 
-                    account_id, 
-                    user_id
-                FROM events_and_ux
-                WHERE DATE(timestamp) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
+                    TIMESTAMP, 
+                    EVENT, 
+                    ACCOUNT_ID, 
+                    USER_ID
+                FROM EVENTS_AND_UX
+                WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
                 AND (
                     {%- for group in feature_def['EXCLUDE'] -%}
                         ({%- for rule in group -%}
@@ -81,18 +82,16 @@ WITH
         )
     {%- endif %}
     ,
-
     {%- if 'EXCLUDE' in feature_def %}
-        {%- do feature_ctes.append(feature_name ~ '_exclude') %}
+        {%- do feature_ctes.append(feature_name ~ '_EXCLUDE') %}
     {%- else %}
-        {%- do feature_ctes.append(feature_name ~ '_include') %}
+        {%- do feature_ctes.append(feature_name ~ '_INCLUDE') %}
     {%- endif %}
-
 
     
 {%- endfor %}
 
-final_features AS (
+FINAL_FEATURES AS (
     {%- for cte_name in feature_ctes %}
         SELECT TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID, FEATURE FROM {{ cte_name }}
         {%- if not loop.last %} UNION ALL {% endif %}
@@ -100,4 +99,4 @@ final_features AS (
 )
 
 -- Final SELECT to combine all feature data and return the result.
-SELECT * FROM final_features
+SELECT TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID, FEATURE FROM FINAL_FEATURES

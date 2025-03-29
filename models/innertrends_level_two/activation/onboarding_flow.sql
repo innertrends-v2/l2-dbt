@@ -8,22 +8,21 @@
 {% set onboarding_steps = get_onboarding_definition(var('client')) %}
 
 WITH
-step_order as (
-    SELECT 'Created account' as step, 1 as step_index UNION ALL
+STEP_ORDER AS (
+    SELECT 'Created account' AS STEP, 1 AS STEP_INDEX UNION ALL
 {%- for step in onboarding_steps %}
     {% set step_name = step.keys() | list | first %}
-    SELECT '{{step_name}}' as step, {{loop.index+1}} as step_index 
+    SELECT '{{step_name}}' AS STEP, {{loop.index+1}} AS STEP_INDEX 
     {%- if not loop.last %} UNION ALL {% endif -%}
 {%- endfor -%}
 ),
 
-all_onboarding_steps as
-(
+ALL_ONBOARDING_STEPS AS (
     SELECT 
         ACCOUNT_ID, 
-        '' as USER_ID, 
-        CREATED_AT as TIMESTAMP, 
-        'Created account' as ONBOARDING_STEP
+        '' AS USER_ID, 
+        CREATED_AT AS TIMESTAMP, 
+        'Created account' AS ONBOARDING_STEP
     FROM
         {{ var("client") }}.ACCOUNTS
     
@@ -38,51 +37,54 @@ all_onboarding_steps as
         {{ ref("onboarding_steps") }}
 ),
 
-ordered_steps as (
-  select
-    data.ACCOUNT_ID,
-    data.TIMESTAMP,
-    data.ONBOARDING_STEP,
-    step_order.step_index,
-    row_number() over (partition by data.ACCOUNT_ID order by data.TIMESTAMP) as rn
-  from all_onboarding_steps data
-  join step_order on data.ONBOARDING_STEP = step_order.step
+ORDERED_STEPS AS (
+    SELECT
+        data.ACCOUNT_ID,
+        data.TIMESTAMP,
+        data.ONBOARDING_STEP,
+        step_order.STEP_INDEX,
+        ROW_NUMBER() OVER (PARTITION BY data.ACCOUNT_ID ORDER BY data.TIMESTAMP) AS RN
+    FROM ALL_ONBOARDING_STEPS data
+    JOIN STEP_ORDER ON data.ONBOARDING_STEP = STEP_ORDER.STEP
 ),
 
-with_lag as (
-  select
-    *,
-    lag(ONBOARDING_STEP) over (partition by ACCOUNT_ID order by TIMESTAMP) as FROM_STEP,
-    lag(TIMESTAMP) over (partition by ACCOUNT_ID order by TIMESTAMP) as FROM_TIMESTAMP,
-    lag(step_index) over (partition by ACCOUNT_ID order by TIMESTAMP) as from_step_index
-  from ordered_steps
+WITH_LAG AS (
+    SELECT
+        *,
+        LAG(ONBOARDING_STEP) OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP) AS FROM_STEP,
+        LAG(TIMESTAMP) OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP) AS FROM_TIMESTAMP,
+        LAG(STEP_INDEX) OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP) AS FROM_STEP_INDEX
+    FROM ORDERED_STEPS
 ),
 
-all_funnel_data as
-(
-SELECT
-    ACCOUNT_ID,
-    FROM_STEP,
-    FROM_TIMESTAMP,
-    ONBOARDING_STEP as TO_STEP,
-    TIMESTAMP as TO_TIMESTAMP
-FROM 
-    with_lag
-WHERE 
-    from_step_index is not null
-    and step_index >= from_step_index
-UNION ALL
-SELECT
-    ACCOUNT_ID,
-    ONBOARDING_STEP as FROM_STEP,
-    TIMESTAMP as FROM_TIMESTAMP,
-    '' as TO_STEP,
-    NULL as TO_TIMESTAMP
-FROM 
-    all_onboarding_steps
-WHERE 
-    ACCOUNT_ID not in 
-    (SELECT DISTINCT ACCOUNT_ID FROM {{ ref("onboarding_steps") }})
+ALL_FUNNEL_DATA AS (
+    SELECT
+        ACCOUNT_ID,
+        FROM_STEP,
+        FROM_TIMESTAMP,
+        ONBOARDING_STEP AS TO_STEP,
+        TIMESTAMP AS TO_TIMESTAMP
+    FROM 
+        WITH_LAG
+    WHERE 
+        FROM_STEP_INDEX IS NOT NULL
+        AND STEP_INDEX >= FROM_STEP_INDEX
+    
+    UNION ALL
+    
+    SELECT
+        ACCOUNT_ID,
+        ONBOARDING_STEP AS FROM_STEP,
+        TIMESTAMP AS FROM_TIMESTAMP,
+        '' AS TO_STEP,
+        NULL AS TO_TIMESTAMP
+    FROM 
+        ALL_ONBOARDING_STEPS
+    WHERE 
+        ACCOUNT_ID NOT IN (
+            SELECT DISTINCT ACCOUNT_ID 
+            FROM {{ ref("onboarding_steps") }}
+        )
 )
 
 SELECT
@@ -92,6 +94,6 @@ SELECT
     TO_STEP,
     TO_TIMESTAMP
 FROM
-    all_funnel_data
+    ALL_FUNNEL_DATA
 ORDER BY
-    FROM_TIMESTAMP 
+    FROM_TIMESTAMP

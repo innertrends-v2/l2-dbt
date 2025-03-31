@@ -2,7 +2,7 @@
 version: 2
 
 models:
-    - name: active_accounts
+    - name: ACTIVE_ACCOUNTS
       description: "Creating the ACTIVE_ACCOUNTS table"
       columns:
           - name: DATE
@@ -14,7 +14,7 @@ models:
             tests:
                 - not_null
 
-    - name: active_accounts_last_seen
+    - name: ACTIVE_ACCOUNTS_LAST_SEEN
       description: "The last day of activity for an account"
       columns:
           - name: ACCOUNT_ID

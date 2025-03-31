@@ -70,7 +70,7 @@ WITH
                         '{{ step_name }}' AS ONBOARDING_STEP,
                         ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) AS RN
                     FROM EVENTS_AND_UX E
-                    {{strict_join}}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if step_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 
@@ -109,7 +109,7 @@ WITH
                         ROW_NUMBER() OVER (PARTITION BY E.ACCOUNT_ID ORDER BY MIN(E.TIMESTAMP)) AS USER_RANK
                     FROM 
                         EVENTS_AND_UX E
-                    {{ strict_join }}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if step_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 
@@ -145,7 +145,7 @@ WITH
                         MIN(E.TIMESTAMP) AS FIRST_EVENT_TIMESTAMP
                     FROM 
                         EVENTS_AND_UX E
-                    {{strict_join}}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if step_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 

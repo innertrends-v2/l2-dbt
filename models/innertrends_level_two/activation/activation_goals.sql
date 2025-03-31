@@ -6,6 +6,8 @@
 {% set dates = get_date_range(var('client')) %}
 {% set activation_goals = get_activation_goals_definition(var('client')) %}
 
+--{{activation_goals}}
+
 WITH 
     EVENTS_AND_UX AS (
         /* Combine data from EVENTS, UX_INTERACTIONS and PAYMENTS tables */
@@ -48,7 +50,7 @@ WITH
         WITH
     {%- for goal_name, goal_definition in goal.items() %}
         {%- set rule_number = goal_definition["rules"] | length %}
-
+        
         {%- set strict_join = '' %}
         {%- if rule_number == 2 and goal_definition["type"].upper() == "STRICT" %}
             {%- set strict_join = 'INNER JOIN GOAL_RULES_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
@@ -68,7 +70,7 @@ WITH
                         '{{ goal_name }}' AS GOAL,
                         ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) AS RN
                     FROM EVENTS_AND_UX E
-                    {{strict_join}}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if goal_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 
@@ -106,7 +108,7 @@ WITH
                         ROW_NUMBER() OVER (PARTITION BY E.ACCOUNT_ID ORDER BY MIN(E.TIMESTAMP)) AS USER_RANK
                     FROM 
                         EVENTS_AND_UX E
-                    {{ strict_join }}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if goal_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 
@@ -142,7 +144,7 @@ WITH
                         MIN(E.TIMESTAMP) AS FIRST_EVENT_TIMESTAMP
                     FROM 
                         EVENTS_AND_UX E
-                    {{strict_join}}
+                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if goal_definition.get("time_limit") %}
                         INNER JOIN 
                             {{ var('client') }}.ACCOUNTS TAC 

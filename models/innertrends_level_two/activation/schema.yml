@@ -2,6 +2,27 @@
 version: 2
 
 models:
+    - name: ONBOARDING_STEPS
+      description: "Creating the ONBOARDING_STEPS table based on defined onboarding steps"
+      columns:
+          - name: TIMESTAMP
+            description: "The timestamp when an onboarding step was reached"
+            tests:
+                - not_null
+          - name: ACCOUNT_ID
+            description: "The id of the account that reached the onboarding step"
+            tests:
+                - not_null
+          - name: USER_ID
+            description: "The id of the user that reached the onboarding step"
+            tests:
+                - not_null
+          - name: ONBOARDING_STEP
+            description: "The name of the reached onboarding step"
+            tests:
+                - not_null
+
+
     - name: ONBOARDING_FLOW
       description: "Creating the ONBOARDING_FLOW table based on onboarding steps"
       columns:

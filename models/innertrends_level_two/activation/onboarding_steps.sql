@@ -53,7 +53,7 @@ WITH
 
         {%- set strict_join = '' %}
         {%- if rule_number == 2 and step_definition["type"].upper() == "STRICT" %}
-            {%- set strict_join = 'INNER JOIN ONBOARDING_RULES_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
+            {%- set strict_join = 'INNER JOIN ONBOARDING_RULE_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
 
         {% endif %}
      

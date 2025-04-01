@@ -258,11 +258,15 @@ ALL_ONBOARDING_STEPS AS (
 )
 
 SELECT
-    ACCOUNT_ID, 
-    USER_ID, 
-    TIMESTAMP, 
-    ONBOARDING_STEP
+    os.ACCOUNT_ID, 
+    os.USER_ID, 
+    os.TIMESTAMP, 
+    os.ONBOARDING_STEP
 FROM
-    ALL_ONBOARDING_STEPS
+    ALL_ONBOARDING_STEPS os
+INNER JOIN
+    {{ var("client") }}.ACCOUNTS ac
+ON 
+    ac.ACCOUNT_ID = os.ACCOUNT_ID AND ac.CREATED_AT <= os.TIMESTAMP --consider only onboarding steps that happen after account creation
 ORDER BY
     TIMESTAMP ASC

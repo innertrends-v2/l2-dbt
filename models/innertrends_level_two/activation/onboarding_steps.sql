@@ -7,6 +7,10 @@
 {% set dates = get_date_range(var('client')) %}
 {% set onboarding_steps = get_onboarding_definition(var('client')) %}
 
+{%- set onboarding_steps_count = onboarding_steps | length %}
+
+{%- if onboarding_steps_count > 0 %}
+
 WITH 
     EVENTS_AND_UX AS (
         /* Combine data from EVENTS, UX_INTERACTIONS and PAYMENTS tables */
@@ -41,7 +45,7 @@ WITH
     ),
 
 
-{%- set onboarding_steps_count = onboarding_steps | length %}
+
 {%- for step in onboarding_steps %}
     
 
@@ -270,3 +274,15 @@ ON
     ac.ACCOUNT_ID = os.ACCOUNT_ID AND ac.CREATED_AT <= os.TIMESTAMP --consider only onboarding steps that happen after account creation
 ORDER BY
     TIMESTAMP ASC
+
+{% else %}
+
+SELECT 
+    NULL AS ACCOUNT_ID,
+    NULL AS USER_ID,
+    NULL AS TIMESTAMP,
+    NULL AS ONBOARDING_STEP
+FROM (SELECT 1) 
+WHERE FALSE
+
+{% endif %}

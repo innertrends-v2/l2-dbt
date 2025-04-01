@@ -1,6 +1,6 @@
 {% macro get_features_definition(client_var) %}
     {% set query %}
-        SELECT features FROM DATA_SETTINGS.{{ client_var }}
+        SELECT features FROM DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
     {% endset %}
 
     {% set results = run_query(query) %}

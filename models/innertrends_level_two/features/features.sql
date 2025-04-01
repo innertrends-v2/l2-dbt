@@ -7,6 +7,9 @@
 {% set features = get_features_definition(var('client')) %}
 {%- set feature_ctes = [] %}
 
+{%- set features_count = features | length %}
+{%- if features_count > 0 %}
+
 WITH 
     EVENTS_AND_UX AS (
         /* Combine data from EVENTS and UX_INTERACTIONS tables */
@@ -100,3 +103,16 @@ FINAL_FEATURES AS (
 
 -- Final SELECT to combine all feature data and return the result.
 SELECT TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID, FEATURE FROM FINAL_FEATURES
+
+{% else %}
+
+SELECT 
+    NULL AS TIMESTAMP,
+    NULL AS EVENT,
+    NULL AS ACCOUNT_ID,
+    NULL AS USER_ID,
+    NULL AS FEATURE
+FROM (SELECT 1) 
+WHERE FALSE
+
+{% endif %}

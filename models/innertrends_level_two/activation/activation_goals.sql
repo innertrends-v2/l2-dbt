@@ -8,6 +8,9 @@
 
 --{{activation_goals}}
 
+{%- set activation_goals_count = activation_goals | length %}
+{%- if activation_goals_count > 0 %}
+
 WITH 
     EVENTS_AND_UX AS (
         /* Combine data from EVENTS, UX_INTERACTIONS and PAYMENTS tables */
@@ -42,7 +45,6 @@ WITH
     ),
 
 
-{%- set activation_goals_count = activation_goals | length %}
 {%- for goal in activation_goals %}
     
     {%- set goal_number = loop.index %}
@@ -264,3 +266,15 @@ FROM
     ALL_GOALS
 ORDER BY
     TIMESTAMP ASC
+
+{% else %}
+
+SELECT 
+    NULL AS ACCOUNT_ID,
+    NULL AS USER_ID,
+    NULL AS TIMESTAMP,
+    NULL AS GOAL
+FROM (SELECT 1) 
+WHERE FALSE
+
+{% endif %}

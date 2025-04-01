@@ -5,7 +5,10 @@
 {%- set segments_tables = [] %}
 
 -- depends_on: {{ ref('active_accounts') }}
-with
+
+{%- set segment_count = segments | length %}
+{%- if segment_count > 0 %}
+WITH
     {%- for segment_name, rulesets in segments.items() %}
         {%- set temp_table_name = segment_name | replace(" ", "_") %}
         {%- set pair = {"segment": segment_name, "table": temp_table_name} %}
@@ -122,3 +125,14 @@ with
         union all
     {% endif -%}
 {% endfor %}
+
+
+{% else %}
+
+SELECT 
+    NULL AS ACCOUNT_ID,
+    NULL AS SEGMENT_NAME
+FROM (SELECT 1) 
+WHERE FALSE
+
+{% endif %}

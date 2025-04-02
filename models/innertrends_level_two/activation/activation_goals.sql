@@ -54,7 +54,7 @@ WITH
         {%- set rule_number = goal_definition["rules"] | length %}
         
         {%- set strict_join = '' %}
-        {%- if rule_number == 2 and goal_definition["type"].upper() == "STRICT" %}
+        {%- if rule_number == 2 and goal_definition.get('type', '').upper() == "STRICT" %}
             {%- set strict_join = 'INNER JOIN GOAL_RULES_1 ST ON E.ACCOUNT_ID = ST.ACCOUNT_ID AND E.TIMESTAMP > ST.TIMESTAMP' %}
 
         {% endif %}

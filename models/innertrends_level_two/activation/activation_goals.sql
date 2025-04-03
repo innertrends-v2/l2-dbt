@@ -63,41 +63,102 @@ WITH
             {%- set rule_number = loop.index %}
             GOAL_RULES_{{rule_number}} AS (
             {%- if rule["template"] == "count" %}
-                
-                WITH RANKED_EVENTS AS (
-                    SELECT 
-                        {%- if rule.get("group_by") == "user_id" %} MIN(E.TIMESTAMP) {%- else %} E.TIMESTAMP {%- endif %} AS TIMESTAMP,
-                        E.ACCOUNT_ID,
-                        E.USER_ID,
-                        '{{ goal_name }}' AS GOAL,
-                        ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) AS RN
-                    FROM EVENTS_AND_UX E
-                    {% if loop.index == 2 %} {{strict_join}} {% endif %}
-                    {% if goal_definition.get("time_limit") %}
-                        INNER JOIN 
-                            {{ var('client') }}.ACCOUNTS TAC 
-                        ON 
-                            E.ACCOUNT_ID = TAC.ACCOUNT_ID
-                            AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
-                    {% endif %}
-                    WHERE {{ generate_activation_query(rule["content"], 'E.') }}
-                        AND E.ACCOUNT_ID IN (
-                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
-                            WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
-                        )
+                {%- if rule.get("group_by","") != "" %}
+                    WITH CATEGORIZED_EVENTS AS (
+                        SELECT 
+                            E.TIMESTAMP,
+                            E.ACCOUNT_ID,
+                            E.USER_ID,
+                            '{{ goal_name }}' AS GOAL,
+                            JSON_EXTRACT_SCALAR(EVENT_PROPERTIES,'$.{{rule["group_by"]}}') AS PROPERTY,
+                            DENSE_RANK() OVER(PARTITION BY E.ACCOUNT_ID, JSON_EXTRACT_SCALAR(EVENT_PROPERTIES,'$.{{rule["group_by"]}}') ORDER BY E.TIMESTAMP ASC) AS PROPERTY_OCURRENCE
+                        FROM EVENTS_AND_UX E
+                        {% if loop.index == 2 %} {{strict_join}} {% endif %}
+                        {% if goal_definition.get("time_limit") %}
+                            INNER JOIN 
+                                {{ var('client') }}.ACCOUNTS TAC 
+                            ON 
+                                E.ACCOUNT_ID = TAC.ACCOUNT_ID
+                                AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
+                        {% endif %}
+                        WHERE {{ generate_activation_query(rule["content"], 'E.') }}
+                            AND E.ACCOUNT_ID IN (
+                                SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
+                                WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
+                            )
 
-                    {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
-                )
-                SELECT 
-                    DISTINCT 
-                    TIMESTAMP, 
-                    ACCOUNT_ID, 
-                    USER_ID, 
-                    GOAL
-                FROM 
-                    RANKED_EVENTS
-                WHERE 
-                    RN = {{ rule["value"] }}
+                        {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
+                    ),
+                    
+                    FIRST_PROPERTY_OCCURRENCES AS (
+                        SELECT
+                            TIMESTAMP,
+                            ACCOUNT_ID,
+                            USER_ID,
+                            GOAL,
+                            PROPERTY
+                        FROM CATEGORIZED_EVENTS
+                        WHERE PROPERTY_OCURRENCE = 1
+                    ),
+                   RANKED_EVENTS AS (
+                        SELECT 
+                            TIMESTAMP,
+                            ACCOUNT_ID,
+                            USER_ID,
+                            GOAL,
+                            ROW_NUMBER() OVER(PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP ASC) AS RN
+                        FROM
+                            FIRST_PROPERTY_OCCURRENCES
+                    )
+                    SELECT 
+                        DISTINCT 
+                        TIMESTAMP, 
+                        ACCOUNT_ID, 
+                        USER_ID, 
+                        GOAL
+                    FROM 
+                        RANKED_EVENTS
+                    WHERE 
+                        RN = {{ rule["value"] }}
+                
+                {%- else %}
+                    WITH RANKED_EVENTS AS (
+                        SELECT 
+                            {%- if rule.get("group_by") == "user_id" %} MIN(E.TIMESTAMP) {%- else %} E.TIMESTAMP {%- endif %} AS TIMESTAMP,
+                            E.ACCOUNT_ID,
+                            E.USER_ID,
+                            '{{ goal_name }}' AS GOAL,
+                            ROW_NUMBER() OVER(PARTITION BY E.ACCOUNT_ID ORDER BY E.TIMESTAMP ASC) AS RN
+                        FROM EVENTS_AND_UX E
+                        {% if loop.index == 2 %} {{strict_join}} {% endif %}
+                        {% if goal_definition.get("time_limit") %}
+                            INNER JOIN 
+                                {{ var('client') }}.ACCOUNTS TAC 
+                            ON 
+                                E.ACCOUNT_ID = TAC.ACCOUNT_ID
+                                AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
+                        {% endif %}
+                        WHERE {{ generate_activation_query(rule["content"], 'E.') }}
+                            AND E.ACCOUNT_ID IN (
+                                SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
+                                WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
+                            )
+
+                        {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
+                    )
+                    SELECT 
+                        DISTINCT 
+                        TIMESTAMP, 
+                        ACCOUNT_ID, 
+                        USER_ID, 
+                        GOAL
+                    FROM 
+                        RANKED_EVENTS
+                    WHERE 
+                        RN = {{ rule["value"] }}
+                
+                
+                {%- endif %}
                 
             
             {%- elif rule["template"] == "user_count" %}

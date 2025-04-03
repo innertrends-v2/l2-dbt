@@ -36,7 +36,7 @@ clean-targets:         # directories to be removed by `dbt clean`
 # using the `{{ config(...) }}` macro.
 
 vars:
-  client: "TEST_SCENARIOS"
+  client: "TEST_SCENARIOS_A"
 
 models:
   active_accounts:

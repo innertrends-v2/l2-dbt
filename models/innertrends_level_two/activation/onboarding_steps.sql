@@ -66,14 +66,21 @@ WITH
             ONBOARDING_RULE_{{rule_number}} AS (
             {%- if rule["template"] == "count" %}
                 {%- if rule.get("group_by","") != "" %}
+                    {%- if rule["group_by"] == "user_id" %}
+                        {%- set property_to_check = 'USER_ID' %}
+                    {%- else %}
+                        {%- set property_to_check = "JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$." ~ rule['group_by'] ~ "')" %}
+                    {%- endif %}
+
+
                     WITH CATEGORIZED_EVENTS AS (
                         SELECT 
                             E.TIMESTAMP,
                             E.ACCOUNT_ID,
                             E.USER_ID,
                             '{{ step_name }}' AS ONBOARDING_STEP,
-                            JSON_EXTRACT_SCALAR(EVENT_PROPERTIES,'$.{{rule["group_by"]}}') AS PROPERTY,
-                            DENSE_RANK() OVER(PARTITION BY E.ACCOUNT_ID, JSON_EXTRACT_SCALAR(EVENT_PROPERTIES,'$.{{rule["group_by"]}}') ORDER BY E.TIMESTAMP ASC) AS PROPERTY_OCURRENCE
+                            {{property_to_check}} AS PROPERTY,
+                            DENSE_RANK() OVER(PARTITION BY E.ACCOUNT_ID, {{property_to_check}} ORDER BY E.TIMESTAMP ASC) AS PROPERTY_OCURRENCE
                         FROM EVENTS_AND_UX E
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if step_definition.get("time_limit") %}
@@ -89,8 +96,6 @@ WITH
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
-
-                        {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
                     ),
                     
                     FIRST_PROPERTY_OCCURRENCES AS (
@@ -128,7 +133,7 @@ WITH
                 
                     WITH RANKED_EVENTS AS (
                         SELECT 
-                            {%- if rule.get("group_by") == "user_id" %} MIN(E.TIMESTAMP) {%- else %} E.TIMESTAMP {%- endif %} AS TIMESTAMP,
+                            E.TIMESTAMP,
                             E.ACCOUNT_ID,
                             E.USER_ID,
                             '{{ step_name }}' AS ONBOARDING_STEP,
@@ -148,8 +153,6 @@ WITH
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
-
-                        {%- if rule.get("group_by") == "user_id" %} GROUP BY E.ACCOUNT_ID, E.USER_ID {%- endif %}
                     )
                     SELECT 
                         DISTINCT 

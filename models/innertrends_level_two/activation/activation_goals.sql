@@ -151,7 +151,7 @@ WITH
                         
                     )
                     SELECT 
-                        DISTINCT TIMESTAMP  
+                        DISTINCT TIMESTAMP,
                         ACCOUNT_ID, 
                         USER_ID, 
                         GOAL

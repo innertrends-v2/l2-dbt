@@ -179,7 +179,7 @@ WITH
                             {{ var('client') }}.ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
-                            AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
+                            AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
                     {% endif %}
                     WHERE
                         E.USER_ID != '' AND E.USER_ID IS NOT NULL
@@ -215,7 +215,7 @@ WITH
                             {{ var('client') }}.ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
-                            AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
+                            AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
                     {% endif %}
                     WHERE
                         {% if "content" in rule %}
@@ -227,7 +227,6 @@ WITH
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
-                        {strict_condition}
                     GROUP BY 
                         E.ACCOUNT_ID, ACTIVITY_DATE
                 ),

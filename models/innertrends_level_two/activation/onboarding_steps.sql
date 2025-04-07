@@ -231,7 +231,6 @@ WITH
                             SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
-                        {strict_condition}
                     GROUP BY 
                         E.ACCOUNT_ID, ACTIVITY_DATE
                 ),

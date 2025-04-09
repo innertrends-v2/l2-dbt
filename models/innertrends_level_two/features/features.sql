@@ -58,13 +58,13 @@ WITH
         ,
         {{ feature_name }}_EXCLUDE AS (
             SELECT 
-                TIMESTAMP, 
-                EVENT, 
-                ACCOUNT_ID, 
-                USER_ID, 
-                FEATURE
-            FROM {{ feature_name }}_INCLUDE
-            WHERE (TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID) NOT IN (
+                a.TIMESTAMP, 
+                a.EVENT, 
+                a.ACCOUNT_ID, 
+                a.USER_ID, 
+                a.FEATURE
+            FROM {{ feature_name }}_INCLUDE a
+            LEFT JOIN (
                 SELECT 
                     TIMESTAMP, 
                     EVENT, 
@@ -81,7 +81,12 @@ WITH
                         {%- if not loop.last %} OR {% endif -%}
                     {%- endfor -%}
                 )
-            )
+            ) b
+            ON a.TIMESTAMP = b.TIMESTAMP
+            AND a.EVENT = b.EVENT
+            AND a.ACCOUNT_ID = b.ACCOUNT_ID
+            AND a.USER_ID = b.USER_ID
+            WHERE b.TIMESTAMP IS NULL
         )
     {%- endif %}
     ,

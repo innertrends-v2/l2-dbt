@@ -85,7 +85,7 @@ WITH
             ON a.TIMESTAMP = b.TIMESTAMP
             AND a.EVENT = b.EVENT
             AND a.ACCOUNT_ID = b.ACCOUNT_ID
-            AND a.USER_ID = b.USER_ID
+            -- AND a.USER_ID = b.USER_ID --userid being null can brake the query
             WHERE b.TIMESTAMP IS NULL
         )
     {%- endif %}

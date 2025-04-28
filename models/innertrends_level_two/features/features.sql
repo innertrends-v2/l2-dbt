@@ -34,7 +34,8 @@ WITH
 
 {%- for feature_name, feature_def in features.items() if 'INCLUDE' in feature_def %}
 
-    {{ feature_name }}_INCLUDE AS (
+    {%- set temp_table_name = feature_name | replace(" ", "_") | replace("-", "_") %}
+    {{ temp_table_name | upper }}_INCLUDE AS (
         SELECT 
             TIMESTAMP, 
             EVENT, 
@@ -91,9 +92,9 @@ WITH
     {%- endif %}
     ,
     {%- if 'EXCLUDE' in feature_def %}
-        {%- do feature_ctes.append(feature_name ~ '_EXCLUDE') %}
+        {%- do feature_ctes.append(temp_table_name | upper ~ '_EXCLUDE') %}
     {%- else %}
-        {%- do feature_ctes.append(feature_name ~ '_INCLUDE') %}
+        {%- do feature_ctes.append(temp_table_name | upper ~ '_INCLUDE') %}
     {%- endif %}
 
     

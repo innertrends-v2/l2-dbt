@@ -10,10 +10,10 @@ models:
         tests:
           - not_null
 
-      - name: SEGMENT_NAME
+      - name: SEGMENT
         description: The name of the segment this account belongs to.
         tests:
           - not_null
     tests:
       - unique:
-          column_name: ["ACCOUNT_ID", "SEGMENT_NAME"]
+          column_name: ["ACCOUNT_ID", "SEGMENT"]

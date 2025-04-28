@@ -119,7 +119,7 @@ WITH
     {%- endfor %}
 
 {% for item in segments_tables %}
-    select account_id, "{{ item.segment }}" as segment_name
+    select ACCOUNT_ID, "{{ item.segment }}" as SEGMENT
     from {{ item.table | upper }}
     {%- if not loop.last %}
         union all
@@ -131,7 +131,7 @@ WITH
 
 SELECT 
     NULL AS ACCOUNT_ID,
-    NULL AS SEGMENT_NAME
+    NULL AS SEGMENT
 FROM (SELECT 1) 
 WHERE FALSE
 

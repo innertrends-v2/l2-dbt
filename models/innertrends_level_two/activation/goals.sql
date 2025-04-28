@@ -1,6 +1,6 @@
 {{ config(
     materialized = 'table',
-    alias = 'ACTIVATION_GOALS'
+    alias = 'GOALS'
 ) }}
 
 {% set dates = get_date_range(var('client')) %}

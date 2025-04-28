@@ -45,15 +45,15 @@ models:
             description: "The onboarding step to which he continued"
 
 
-    - name: ACTIVATION_GOALS
-      description: "Creating the ACTIVATION_GOALS table"
+    - name: GOALS
+      description: "Creating the GOALS table"
       columns:
           - name: ACCOUNT_ID
-            description: "The id of the account that reached activation goal"
+            description: "The id of the account that reached a goal"
             tests:
                 - not_null
           - name: USER_ID
-            description: "The id of the user that reached activation goal"
+            description: "The id of the user that reached a goal"
             tests:
                 - not_null
           - name: GOAL

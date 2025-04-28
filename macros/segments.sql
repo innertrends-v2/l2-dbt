@@ -11,10 +11,12 @@
         -- Parse the JSON string into a Jinja data structure
         {% set segments_definition = fromjson(segments_json_string) %}
 
-        -- Create a dictionary for the cleaned segment names
+        -- Create a dictionary for the cleaned segment names, excluding empty objects
         {% set cleaned_segments = {} %}
         {% for segment_name, segment_value in segments_definition.items() %}
-            {% do cleaned_segments.update({ segment_name: segment_value }) %}
+            {% if segment_value != {} %}
+                {% do cleaned_segments.update({ segment_name: segment_value }) %}
+            {% endif %}
         {% endfor %}
 
         {{ return(cleaned_segments) }}

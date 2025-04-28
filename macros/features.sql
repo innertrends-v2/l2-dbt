@@ -14,7 +14,7 @@
         -- Create a dictionary for the cleaned feature names
         {% set cleaned_features = {} %}
         {% for feature_name, feature_value in features_definition.items() %}
-            {% set clean_feature_name = feature_name | replace(" ", "_") | replace("_include", "") %}
+            {% set clean_feature_name = feature_name %}
             {% do cleaned_features.update({ clean_feature_name: feature_value }) %}
         {% endfor %}
 

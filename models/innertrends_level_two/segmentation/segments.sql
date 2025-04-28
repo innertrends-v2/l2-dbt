@@ -95,21 +95,21 @@ WITH
                             where
                                 not exists (
                                     select 1
-                                    from {{ temp_table_name | upper }}_exclude b
+                                    from {{ temp_table_name | upper }}_EXCLUDE b
                                     where a.account_id = b.account_id
                                 )
-                                {%- elif "EXCLUDE" in ruleset %}
+                        {%- elif "EXCLUDE" in ruleset and include_or_exclude == "EXCLUDE" %}
                             select distinct a.account_id
-                            from {{ temp_table_name | upper }}_include a
+                            from {{ temp_table_name | upper }}_INCLUDE a
                             where
                                 not exists (
                                     select 1
-                                    from {{ temp_table_name | upper }}_exclude b
+                                    from {{ temp_table_name | upper }}_EXCLUDE b
                                     where a.account_id = b.account_id
                                 )
-                                {%- elif "INCLUDE" in ruleset %}
+                        {%- elif "EXCLUDE" not in ruleset %}
                             select distinct account_id
-                            from {{ temp_table_name | upper }}_include
+                            from {{ temp_table_name | upper }}_INCLUDE
                         {%- endif %}
                     {%- endfor %}
                 {%- endfor %}

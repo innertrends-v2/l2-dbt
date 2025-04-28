@@ -40,7 +40,7 @@
                                                 TIMESTAMP, 
                                                 PROPERTY_VALUE,
                                                 ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP ASC) AS row_num
-                                            FROM {{ var('client') }}.ACCOUNT_PROPERTIES
+                                            FROM {{ var('client') }}.ACCOUNTS_PROPERTIES
                                             WHERE PROPERTY_KEY = '{{ property }}'
                                         )
                                         SELECT 
@@ -66,7 +66,7 @@
                                                 TIMESTAMP, 
                                                 PROPERTY_VALUE,
                                                 ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP DESC) AS row_num
-                                            FROM {{ var('client') }}.ACCOUNT_PROPERTIES
+                                            FROM {{ var('client') }}.ACCOUNTS_PROPERTIES
                                             WHERE PROPERTY_KEY = '{{ property }}'
                                         )
                                         SELECT 
@@ -84,7 +84,7 @@
             ACCOUNT_ID, 
             TIMESTAMP, 
             PROPERTY_VALUE
-        FROM {{ var('client') }}.ACCOUNT_PROPERTIES
+        FROM {{ var('client') }}.ACCOUNTS_PROPERTIES
         WHERE PROPERTY_KEY = '{{ property }}' AND {{ sql_condition }}
         {% endset %}
 

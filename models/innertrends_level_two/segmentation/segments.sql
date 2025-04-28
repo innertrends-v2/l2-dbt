@@ -10,7 +10,7 @@
 {%- if segment_count > 0 %}
 WITH
     {%- for segment_name, rulesets in segments.items() %}
-        {%- set temp_table_name = segment_name | replace(" ", "_") %}
+        {%- set temp_table_name = segment_name | replace(" ", "_") | replace("-", "_") %}
         {%- set pair = {"segment": segment_name, "table": temp_table_name} %}
         {%- do segments_tables.append(pair) %}
 

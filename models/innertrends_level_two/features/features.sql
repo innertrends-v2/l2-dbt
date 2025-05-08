@@ -20,6 +20,7 @@ WITH
             USER_ID, 
             EVENT_PROPERTIES
         FROM {{ var('client') }}.EVENTS
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
 
@@ -30,6 +31,7 @@ WITH
             USER_ID, 
             EVENT_PROPERTIES  
         FROM {{ var('client') }}.UX_INTERACTIONS
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
     ),
 
 {%- for feature_name, feature_def in features.items() if 'INCLUDE' in feature_def %}
@@ -43,8 +45,7 @@ WITH
             USER_ID, 
             '{{ feature_name }}' AS FEATURE
         FROM EVENTS_AND_UX
-        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
-        AND (
+        WHERE (
             {%- for group in feature_def['INCLUDE'] -%}
                 ({%- for rule in group -%}
                     {{- retrieve_match(rule['match_type'], rule['match_property'], rule['match_value']) -}}
@@ -72,8 +73,7 @@ WITH
                     ACCOUNT_ID, 
                     USER_ID
                 FROM EVENTS_AND_UX
-                WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
-                AND (
+                WHERE (
                     {%- for group in feature_def['EXCLUDE'] -%}
                         ({%- for rule in group -%}
                             {{- retrieve_match(rule['match_type'], rule['match_property'], rule['match_value']) -}}

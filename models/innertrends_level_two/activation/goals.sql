@@ -21,6 +21,7 @@ WITH
             USER_ID, 
             EVENT_PROPERTIES
         FROM {{ var('client') }}.EVENTS
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
 
@@ -31,6 +32,7 @@ WITH
             USER_ID, 
             EVENT_PROPERTIES  
         FROM {{ var('client') }}.UX_INTERACTIONS
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
 
@@ -40,8 +42,8 @@ WITH
             ACCOUNT_ID, 
             USER_ID,
             PAYMENT_PROPERTIES AS EVENT_PROPERTIES
-        FROM 
-            {{ var('client') }}.PAYMENTS
+        FROM {{ var('client') }}.PAYMENTS
+        WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
     ),
 
 

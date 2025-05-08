@@ -16,8 +16,9 @@ WITH
         FROM
             {{ var('client') }}.EVENTS
         WHERE
+            DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }} AND (
             JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') IS NULL
-            OR JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') != 'true'
+            OR JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') != 'true')
         
         UNION ALL
         
@@ -30,8 +31,9 @@ WITH
         FROM
             {{ var('client') }}.UX_INTERACTIONS
         WHERE
+            DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }} AND (
             JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') IS NULL
-            OR JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') != 'true'
+            OR JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') != 'true')
         
         UNION ALL
         
@@ -43,6 +45,8 @@ WITH
             '' AS EVENT_PROPERTIES
         FROM
             {{ var('client') }}.ACCOUNTS
+        WHERE
+            CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP({{ dates.end_date }})
     )
 
 SELECT

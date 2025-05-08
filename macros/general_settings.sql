@@ -7,7 +7,7 @@
 
     {% if execute %}
         {% set start_date = results.columns[0].values()[0] %}
-        {% set end_date = 'date_sub(current_date(), INTERVAL 1 DAY)' %}
+        {% set end_date = 'current_date()' %}
         -- Returning both start_date and end_date as a dictionary
         {{ return({'start_date': start_date, 'end_date': end_date}) }}
     {% else %}

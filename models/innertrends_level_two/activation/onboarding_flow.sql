@@ -25,6 +25,8 @@ ALL_ONBOARDING_STEPS AS (
         'Created account' AS ONBOARDING_STEP
     FROM
         {{ var("client") }}.ACCOUNTS
+    WHERE
+        CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP({{ dates.end_date }})
     
     UNION ALL
     

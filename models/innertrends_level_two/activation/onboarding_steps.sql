@@ -75,14 +75,13 @@ WITH
                     {%- endif %}
 
 
-                    WITH CATEGORIZED_EVENTS AS (
+                    WITH FIRST_EVENTS AS (
                         SELECT 
-                            E.TIMESTAMP,
+                            MIN(E.TIMESTAMP),
                             E.ACCOUNT_ID,
                             E.USER_ID,
                             '{{ step_name }}' AS ONBOARDING_STEP,
                             {{property_to_check}} AS PROPERTY,
-                            DENSE_RANK() OVER(PARTITION BY E.ACCOUNT_ID, {{property_to_check}} ORDER BY E.TIMESTAMP ASC) AS PROPERTY_OCURRENCE
                         FROM EVENTS_AND_UX E
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if step_definition.get("time_limit") %}
@@ -99,26 +98,15 @@ WITH
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
                     ),
-                    
-                    FIRST_PROPERTY_OCCURRENCES AS (
+                    CATEGORIZED_EVENTS AS (
                         SELECT
-                            TIMESTAMP,
                             ACCOUNT_ID,
                             USER_ID,
+                            FIRST_TIMESTAMP as TIMESTAMP,
                             ONBOARDING_STEP,
-                            PROPERTY
-                        FROM CATEGORIZED_EVENTS
-                        WHERE PROPERTY_OCURRENCE = 1
-                    ),
-                   RANKED_EVENTS AS (
-                        SELECT 
-                            TIMESTAMP,
-                            ACCOUNT_ID,
-                            USER_ID,
-                            ONBOARDING_STEP,
-                            ROW_NUMBER() OVER(PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP ASC) AS RN
-                        FROM
-                            FIRST_PROPERTY_OCCURRENCES
+                            PROPERTY,
+                            DENSE_RANK() OVER (PARTITION BY ACCOUNT_ID ORDER BY FIRST_TIMESTAMP) AS RN
+                        FROM FIRST_EVENTS
                     )
                     SELECT 
                         DISTINCT 
@@ -127,7 +115,7 @@ WITH
                         USER_ID, 
                         ONBOARDING_STEP
                     FROM 
-                        RANKED_EVENTS
+                        CATEGORIZED_EVENTS
                     WHERE 
                         RN = {{ rule["value"] }}
                 

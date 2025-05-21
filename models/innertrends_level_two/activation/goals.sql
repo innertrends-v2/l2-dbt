@@ -72,14 +72,13 @@ WITH
                         {%- set property_to_check = "JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$." ~ rule['group_by'] ~ "')" %}
                     {%- endif %}
 
-                    WITH CATEGORIZED_EVENTS AS (
+                    WITH FIRST_EVENTS AS (
                         SELECT 
-                            E.TIMESTAMP,
+                            MIN(E.TIMESTAMP) AS FIRST_TIMESTAMP,
                             E.ACCOUNT_ID,
                             E.USER_ID,
                             '{{ goal_name }}' AS GOAL,
                             {{property_to_check}} AS PROPERTY,
-                            DENSE_RANK() OVER(PARTITION BY E.ACCOUNT_ID, {{property_to_check}} ORDER BY E.TIMESTAMP ASC) AS PROPERTY_OCURRENCE
                         FROM EVENTS_AND_UX E
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if goal_definition.get("time_limit") %}
@@ -94,28 +93,21 @@ WITH
                                 SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
                                 WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
+                        GROUP BY ACCOUNT_ID, USER_ID
                     ),
-                    
-                    FIRST_PROPERTY_OCCURRENCES AS (
+
+                    CATEGORIZED_EVENTS AS (
                         SELECT
-                            TIMESTAMP,
                             ACCOUNT_ID,
                             USER_ID,
+                            FIRST_TIMESTAMP as TIMESTAMP,
                             GOAL,
-                            PROPERTY
-                        FROM CATEGORIZED_EVENTS
-                        WHERE PROPERTY_OCURRENCE = 1
-                    ),
-                   RANKED_EVENTS AS (
-                        SELECT 
-                            TIMESTAMP,
-                            ACCOUNT_ID,
-                            USER_ID,
-                            GOAL,
-                            ROW_NUMBER() OVER(PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP ASC) AS RN
-                        FROM
-                            FIRST_PROPERTY_OCCURRENCES
+                            PROPERTY,
+                            DENSE_RANK() OVER (PARTITION BY ACCOUNT_ID ORDER BY FIRST_TIMESTAMP) AS RN
+                        FROM FIRST_EVENTS
                     )
+                    
+                    
                     SELECT 
                         DISTINCT 
                         TIMESTAMP, 
@@ -123,7 +115,7 @@ WITH
                         USER_ID, 
                         GOAL
                     FROM 
-                        RANKED_EVENTS
+                        CATEGORIZED_EVENTS
                     WHERE 
                         RN = {{ rule["value"] }}
                 

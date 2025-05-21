@@ -77,7 +77,7 @@ WITH
 
                     WITH FIRST_EVENTS AS (
                         SELECT 
-                            MIN(E.TIMESTAMP),
+                            MIN(E.TIMESTAMP) as FIRST_TIMESTAMP,
                             E.ACCOUNT_ID,
                             E.USER_ID,
                             '{{ step_name }}' AS ONBOARDING_STEP,

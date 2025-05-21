@@ -93,7 +93,7 @@ WITH
                                 SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
                                 WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
-                        GROUP BY ACCOUNT_ID, USER_ID
+                        GROUP BY ACCOUNT_ID, USER_ID, PROPERTY
                     ),
 
                     CATEGORIZED_EVENTS AS (

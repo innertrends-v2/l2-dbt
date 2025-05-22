@@ -111,19 +111,6 @@ FINAL_FEATURES AS (
 SELECT TIMESTAMP, EVENT, ACCOUNT_ID, USER_ID, FEATURE FROM FINAL_FEATURES
 
 {% else %}
-
-SELECT 
-    NULL AS TIMESTAMP,
-    NULL AS EVENT,
-    NULL AS ACCOUNT_ID,
-    NULL AS USER_ID,
-    NULL AS FEATURE
-FROM (SELECT 1) 
-WHERE FALSE
-
-{% endif %}
-
-{% else %}
 {{ schema_stub([
     {"name": "TIMESTAMP", "type": "TIMESTAMP"},
     {"name": "EVENT", "type": "STRING"},

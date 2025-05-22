@@ -35,3 +35,13 @@
         (REGEXP_CONTAINS({{ property_match }}, '{{ value }}'))
     {%- endif -%}
 {% endmacro %}
+
+
+{% macro schema_stub(column_defs) %}
+SELECT
+{%- for col in column_defs %}
+    CAST(NULL AS {{ col.type }}) AS {{ col.name }}{% if not loop.last %},{% endif %}
+{%- endfor %}
+FROM (SELECT 1)
+WHERE FALSE
+{% endmacro %}

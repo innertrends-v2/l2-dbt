@@ -122,3 +122,13 @@ FROM (SELECT 1)
 WHERE FALSE
 
 {% endif %}
+
+{% else %}
+{{ schema_stub([
+    {"name": "TIMESTAMP", "type": "TIMESTAMP"},
+    {"name": "EVENT", "type": "STRING"},
+    {"name": "ACCOUNT_ID", "type": "STRING"},
+    {"name": "USER_ID", "type": "STRING"},
+    {"name": "FEATURE", "type": "STRING"}
+]) }}
+{% endif %}

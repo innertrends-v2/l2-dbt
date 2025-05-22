@@ -324,13 +324,10 @@ ORDER BY
     TIMESTAMP ASC
 
 {% else %}
-
-SELECT 
-    NULL AS ACCOUNT_ID,
-    NULL AS USER_ID,
-    NULL AS TIMESTAMP,
-    NULL AS GOAL
-FROM (SELECT 1) 
-WHERE FALSE
-
+{{ schema_stub([
+  {"name": "ACCOUNT_ID", "type": "STRING"},
+  {"name": "USER_ID", "type": "STRING"},
+  {"name": "TIMESTAMP", "type": "TIMESTAMP"},
+  {"name": "GOAL", "type": "STRING"}
+]) }}
 {% endif %}

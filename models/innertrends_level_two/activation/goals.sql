@@ -103,7 +103,7 @@ WITH
                             FIRST_TIMESTAMP as TIMESTAMP,
                             GOAL,
                             PROPERTY,
-                            DENSE_RANK() OVER (PARTITION BY ACCOUNT_ID ORDER BY FIRST_TIMESTAMP) AS RN
+                            ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY FIRST_TIMESTAMP) AS RN
                         FROM FIRST_EVENTS
                     )
                     

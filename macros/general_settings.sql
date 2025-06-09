@@ -1,6 +1,6 @@
 {% macro get_date_range(client_var) %}
     {% set query %}
-        SELECT start_date FROM DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
+        SELECT start_date FROM innertrends-clients.DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
     {% endset %}
 
     {% set results = run_query(query) %}

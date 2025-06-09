@@ -1,6 +1,6 @@
 {% macro get_onboarding_definition(client_var) %}
     {% set query %}
-        SELECT ONBOARDING_STEPS FROM DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
+        SELECT ONBOARDING_STEPS FROM innertrends-clients.DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
     {% endset %}
 
     {% set results = run_query(query) %}
@@ -20,7 +20,7 @@
 
 {% macro get_activation_goals_definition(client_var) %}
     {% set query %}
-        SELECT GOALS FROM DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
+        SELECT GOALS FROM innertrends-clients.DATA_SETTINGS.{{ client_var }} ORDER BY SETTINGS_TIMESTAMP DESC LIMIT 1
     {% endset %}
 
     {% set results = run_query(query) %}

@@ -37,9 +37,6 @@ clean-targets:         # directories to be removed by `dbt clean`
 
 vars:
   client: "TEST_SCENARIOS"
+  #dataset: "innertrends"
 
-models:
-  active_accounts:
-    # Applies to all files under models/example/
-    active_accounts:
-      +materialized: table
+

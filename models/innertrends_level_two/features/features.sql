@@ -5,6 +5,8 @@
 
 {% set dates = get_date_range(var('client')) %}
 {% set features = get_features_definition(var('client')) %}
+{% set dataset = var('dataset', var('client')) %}
+
 {%- set feature_ctes = [] %}
 
 {%- set features_count = features | length %}
@@ -19,7 +21,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES
-        FROM {{ var('client') }}.EVENTS
+        FROM {{ dataset }}.EVENTS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
@@ -30,7 +32,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES  
-        FROM {{ var('client') }}.UX_INTERACTIONS
+        FROM {{ dataset }}.UX_INTERACTIONS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
     ),
 

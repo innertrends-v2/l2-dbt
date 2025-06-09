@@ -6,6 +6,7 @@
 
 {% set dates = get_date_range(var('client')) %}
 {% set onboarding_steps = get_onboarding_definition(var('client')) %}
+{% set dataset = var('dataset', var('client')) %}
 
 {%- set onboarding_steps_count = onboarding_steps | length %}
 
@@ -20,7 +21,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES
-        FROM {{ var('client') }}.EVENTS
+        FROM {{ dataset }}.EVENTS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
@@ -31,7 +32,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES  
-        FROM {{ var('client') }}.UX_INTERACTIONS
+        FROM {{ dataset }}.UX_INTERACTIONS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
@@ -42,7 +43,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID,
             PAYMENT_PROPERTIES AS EVENT_PROPERTIES
-        FROM {{ var('client') }}.PAYMENTS
+        FROM {{ dataset }}.PAYMENTS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
     ),
 
@@ -86,7 +87,7 @@ WITH
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if step_definition.get("time_limit") %}
                             INNER JOIN 
-                                {{ var('client') }}.ACCOUNTS TAC 
+                                {{ dataset }}.ACCOUNTS TAC 
                             ON 
                                 E.ACCOUNT_ID = TAC.ACCOUNT_ID
                                 AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
@@ -94,7 +95,7 @@ WITH
                         WHERE 
                             {{ generate_activation_query(rule["content"], 'E.') }}
                             AND E.ACCOUNT_ID IN (
-                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
                         GROUP BY ACCOUNT_ID, USER_ID, PROPERTY
@@ -133,7 +134,7 @@ WITH
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if step_definition.get("time_limit") %}
                             INNER JOIN 
-                                {{ var('client') }}.ACCOUNTS TAC 
+                                {{ dataset }}.ACCOUNTS TAC 
                             ON 
                                 E.ACCOUNT_ID = TAC.ACCOUNT_ID
                                 AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
@@ -141,7 +142,7 @@ WITH
                         WHERE 
                             {{ generate_activation_query(rule["content"], 'E.') }}
                             AND E.ACCOUNT_ID IN (
-                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
                     )
@@ -171,7 +172,7 @@ WITH
                     {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if step_definition.get("time_limit") %}
                         INNER JOIN 
-                            {{ var('client') }}.ACCOUNTS TAC 
+                            {{ dataset }}.ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
                             AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
@@ -180,7 +181,7 @@ WITH
                         E.USER_ID != '' AND E.USER_ID IS NOT NULL
                         AND E.ACCOUNT_ID IN
                         (
-                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
                     GROUP BY 
@@ -207,7 +208,7 @@ WITH
                     {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if step_definition.get("time_limit") %}
                         INNER JOIN 
-                            {{ var('client') }}.ACCOUNTS TAC 
+                            {{ dataset }}.ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
                             AND DATE(E.TIMESTAMP) >= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ step_definition["time_limit"]["days_count"] }} DAY)
@@ -219,7 +220,7 @@ WITH
                         {% endif %}
                         E.ACCOUNT_ID IN
                         (
-                            SELECT ACCOUNT_ID FROM {{ var('client') }}.ACCOUNTS 
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
                     GROUP BY 
@@ -323,7 +324,7 @@ SELECT
 FROM
     ALL_ONBOARDING_STEPS os
 INNER JOIN
-    {{ var("client") }}.ACCOUNTS ac
+    {{ dataset }}.ACCOUNTS ac
 ON 
     ac.ACCOUNT_ID = os.ACCOUNT_ID AND ac.CREATED_AT <= os.TIMESTAMP --consider only onboarding steps that happen after account creation
 ORDER BY

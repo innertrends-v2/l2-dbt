@@ -4,6 +4,7 @@
 ) }}
 
 {% set dates = get_date_range(var('client')) %}
+{% set dataset = var('dataset', var('client')) %}
 
 WITH 
     ALL_EVENTS AS (
@@ -14,7 +15,7 @@ WITH
             USER_ID,
             EVENT_PROPERTIES
         FROM
-            {{ var('client') }}.EVENTS
+            {{ dataset }}.EVENTS
         WHERE
             DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }} AND (
             JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') IS NULL
@@ -29,7 +30,7 @@ WITH
             USER_ID,
             EVENT_PROPERTIES
         FROM
-            {{ var('client') }}.UX_INTERACTIONS
+            {{ dataset }}.UX_INTERACTIONS
         WHERE
             DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }} AND (
             JSON_EXTRACT_SCALAR(EVENT_PROPERTIES, '$.ignore_retention') IS NULL
@@ -44,7 +45,7 @@ WITH
             '' AS USER_ID,
             '' AS EVENT_PROPERTIES
         FROM
-            {{ var('client') }}.ACCOUNTS
+            {{ dataset }}.ACCOUNTS
         WHERE
             CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP({{ dates.end_date }})
     )

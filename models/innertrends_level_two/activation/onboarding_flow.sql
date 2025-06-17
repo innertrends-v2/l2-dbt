@@ -7,6 +7,7 @@
 {% set dates = get_date_range(var('client')) %}
 {% set onboarding_steps = get_onboarding_definition(var('client')) %}
 {% set dataset = var('dataset', var('client')) %}
+{% set table_prefix = var('table_prefix', '') %}
 
 WITH RECURSIVE
 STEP_ORDER AS (
@@ -25,7 +26,7 @@ ALL_ONBOARDING_STEPS AS (
         CREATED_AT AS TIMESTAMP, 
         'Created account' AS ONBOARDING_STEP
     FROM
-        {{ dataset }}.ACCOUNTS
+        {{ dataset }}.{{ table_prefix }}ACCOUNTS
     WHERE
         CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP({{ dates.end_date }})
     

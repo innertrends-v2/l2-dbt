@@ -6,6 +6,8 @@
 {% set dates = get_date_range(var("client")) %}
 {% set segments = get_segments_definition(var("client")) %}
 {% set dataset = var('dataset', var('client')) %}
+{% set table_prefix = var('table_prefix', '') %}
+
 {%- set segments_tables = [] %}
 
 -- depends_on: {{ ref('active_accounts') }}

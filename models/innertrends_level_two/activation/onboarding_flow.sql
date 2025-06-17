@@ -1,6 +1,6 @@
 {{ config(
     materialized = 'table',
-    alias = 'ONBOARDING_FLOW'
+    alias = var('table_prefix', '') ~ 'ONBOARDING_FLOW'
 ) }}
 
 

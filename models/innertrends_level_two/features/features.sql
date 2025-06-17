@@ -1,6 +1,6 @@
 {{ config( 
     materialized = 'table',  
-    alias = 'FEATURES'  
+    alias = var('table_prefix', '') ~ 'FEATURES'  
 ) }}
 
 {% set dates = get_date_range(var('client')) %}

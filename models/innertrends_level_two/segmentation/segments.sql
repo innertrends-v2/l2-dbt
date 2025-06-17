@@ -1,4 +1,7 @@
-{{ config(materialized="table", alias="ACCOUNTS_SEGMENTS") }}
+{{ config(
+    materialized="table", 
+    alias = var('table_prefix', '') ~ "ACCOUNTS_SEGMENTS"
+)}}
 
 {% set dates = get_date_range(var("client")) %}
 {% set segments = get_segments_definition(var("client")) %}

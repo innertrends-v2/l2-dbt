@@ -6,6 +6,7 @@
 {% set dates = get_date_range(var('client')) %}
 {% set activation_goals = get_activation_goals_definition(var('client')) %}
 {% set dataset = var('dataset', var('client')) %}
+{% set table_prefix = var('table_prefix', '') %}
 
 --{{activation_goals}}
 
@@ -21,7 +22,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES
-        FROM {{ dataset }}.EVENTS
+        FROM {{ dataset }}.{{ table_prefix }}EVENTS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
@@ -32,7 +33,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID, 
             EVENT_PROPERTIES  
-        FROM {{ dataset }}.UX_INTERACTIONS
+        FROM {{ dataset }}.{{ table_prefix }}UX_INTERACTIONS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
 
         UNION ALL
@@ -43,7 +44,7 @@ WITH
             ACCOUNT_ID, 
             USER_ID,
             PAYMENT_PROPERTIES AS EVENT_PROPERTIES
-        FROM {{ dataset }}.PAYMENTS
+        FROM {{ dataset }}.{{ table_prefix }}PAYMENTS
         WHERE DATE(TIMESTAMP) BETWEEN '{{ dates.start_date }}' AND {{ dates.end_date }}
     ),
 
@@ -84,14 +85,14 @@ WITH
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if goal_definition.get("time_limit") %}
                             INNER JOIN 
-                                {{ dataset }}.ACCOUNTS TAC 
+                                {{ dataset }}.{{ table_prefix }}ACCOUNTS TAC 
                             ON 
                                 E.ACCOUNT_ID = TAC.ACCOUNT_ID
                                 AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
                         {% endif %}
                         WHERE {{ generate_activation_query(rule["content"], 'E.') }}
                             AND E.ACCOUNT_ID IN (
-                                SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS
+                                SELECT ACCOUNT_ID FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS
                                 WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
                         GROUP BY ACCOUNT_ID, USER_ID, PROPERTY
@@ -132,14 +133,14 @@ WITH
                         {% if loop.index == 2 %} {{strict_join}} {% endif %}
                         {% if goal_definition.get("time_limit") %}
                             INNER JOIN 
-                                {{ dataset }}.ACCOUNTS TAC 
+                                {{ dataset }}.{{ table_prefix }}ACCOUNTS TAC 
                             ON 
                                 E.ACCOUNT_ID = TAC.ACCOUNT_ID
                                 AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
                         {% endif %}
                         WHERE {{ generate_activation_query(rule["content"], 'E.') }}
                             AND E.ACCOUNT_ID IN (
-                                SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS
+                                SELECT ACCOUNT_ID FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS
                                 WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                             )
 
@@ -171,7 +172,7 @@ WITH
                     {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if goal_definition.get("time_limit") %}
                         INNER JOIN 
-                            {{ dataset }}.ACCOUNTS TAC 
+                            {{ dataset }}.{{ table_prefix }}ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
                             AND DATE(E.TIMESTAMP) <= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
@@ -180,7 +181,7 @@ WITH
                         E.USER_ID != '' AND E.USER_ID IS NOT NULL
                         AND E.ACCOUNT_ID IN
                         (
-                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS 
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
                     GROUP BY 
@@ -207,7 +208,7 @@ WITH
                     {% if loop.index == 2 %} {{strict_join}} {% endif %}
                     {% if goal_definition.get("time_limit") %}
                         INNER JOIN 
-                            {{ dataset }}.ACCOUNTS TAC 
+                            {{ dataset }}.{{ table_prefix }}ACCOUNTS TAC 
                         ON 
                             E.ACCOUNT_ID = TAC.ACCOUNT_ID
                             AND DATE(E.TIMESTAMP) >= DATE_ADD(DATE(TAC.CREATED_AT), INTERVAL {{ goal_definition["time_limit"]["days_count"] }} DAY)
@@ -219,7 +220,7 @@ WITH
                         {% endif %}
                         E.ACCOUNT_ID IN
                         (
-                            SELECT ACCOUNT_ID FROM {{ dataset }}.ACCOUNTS 
+                            SELECT ACCOUNT_ID FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS 
                             WHERE CREATED_AT BETWEEN TIMESTAMP('{{ dates.start_date }}') AND TIMESTAMP(CURRENT_DATE())
                         )
                     GROUP BY 

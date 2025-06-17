@@ -29,6 +29,7 @@
 {% macro retrieve_time_based_filter(property, value_timing, sql_condition) %}
 
     {% set dataset = var('dataset', var('client')) %}
+    {% set table_prefix = var('table_prefix', '') %}
 
     {% if value_timing == "first" %}
         {% set filter_sql %}
@@ -44,7 +45,7 @@
                                                 TIMESTAMP, 
                                                 PROPERTY_VALUE,
                                                 ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP ASC) AS row_num
-                                            FROM {{ dataset }}.ACCOUNTS_PROPERTIES
+                                            FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS_PROPERTIES
                                             WHERE PROPERTY_KEY = '{{ property }}'
                                         )
                                         SELECT 
@@ -70,7 +71,7 @@
                                                 TIMESTAMP, 
                                                 PROPERTY_VALUE,
                                                 ROW_NUMBER() OVER (PARTITION BY ACCOUNT_ID ORDER BY TIMESTAMP DESC) AS row_num
-                                            FROM {{ dataset }}.ACCOUNTS_PROPERTIES
+                                            FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS_PROPERTIES
                                             WHERE PROPERTY_KEY = '{{ property }}'
                                         )
                                         SELECT 
@@ -88,7 +89,7 @@
             ACCOUNT_ID, 
             TIMESTAMP, 
             PROPERTY_VALUE
-        FROM {{ dataset }}.ACCOUNTS_PROPERTIES
+        FROM {{ dataset }}.{{ table_prefix }}ACCOUNTS_PROPERTIES
         WHERE PROPERTY_KEY = '{{ property }}' AND {{ sql_condition }}
         {% endset %}
 
